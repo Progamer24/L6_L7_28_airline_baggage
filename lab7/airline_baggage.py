@@ -1,13 +1,54 @@
+"""Safe helpers for parsing airline booking and baggage information."""
+
+from math import isfinite
+
+
 def parse_booking(code):
-    airline, flight, seat = code.split('-')
-    return airline.upper(), int(flight), seat[-1].upper()
+    """Return ``(airline, flight, seat_letter)`` or an empty result."""
+    if not isinstance(code, str):
+        return "", 0, ""
+
+    parts = code.strip().split("-")
+    if len(parts) != 3 or not all(parts):
+        return "", 0, ""
+
+    airline, flight, seat = parts
+    try:
+        flight_number = int(flight)
+    except ValueError:
+        return "", 0, ""
+
+    if flight_number < 0:
+        return "", 0, ""
+
+    return airline.upper(), flight_number, seat[-1].upper()
+
 
 def total_weight(weights_csv):
-    return sum(float(w) for w in weights_csv.split(','))
+    """Return the sum of valid comma-separated non-negative weights."""
+    if not isinstance(weights_csv, str) or not weights_csv.strip():
+        return 0.0
+
+    total = 0.0
+    for value in weights_csv.split(","):
+        try:
+            weight = float(value.strip())
+        except ValueError:
+            continue
+        if isfinite(weight) and weight >= 0:
+            total += weight
+    return total
+
 
 def tag_label(name):
+    """Return an uppercase ``initial. SURNAME`` label or an empty string."""
+    if not isinstance(name, str):
+        return ""
+
     parts = name.split()
-    return parts[0][0].upper() + '. ' + parts[1].upper()
+    if len(parts) < 2:
+        return ""
+    return parts[0][0].upper() + ". " + parts[1].upper()
 
 def main():
     print("==== Running parse_booking ====")
